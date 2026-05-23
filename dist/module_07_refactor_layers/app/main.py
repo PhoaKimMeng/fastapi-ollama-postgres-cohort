@@ -10,6 +10,12 @@ from app.schemas import AskRequest, AskResponse, Interaction
 from app.services.ollama_service import call_ollama
 from app.services.interaction_service import save_interaction, fetch_recent_history
 
+SYSTEM_PROMPT = (
+    "You are a concise, helpful assistant. "
+    "Answer in one short paragraph (under 80 words). "
+    "If you don't know, say so plainly."
+)
+
 app = FastAPI(title="Local LLM Question Log")
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -26,7 +32,7 @@ def ask(payload: AskRequest):
     question = payload.question.strip()
     if not question:
         raise HTTPException(status_code=400, detail="Please enter a question.")
-    answer = call_ollama(question)
+    answer = call_ollama(question, SYSTEM_PROMPT)
     save_interaction(question, answer)
     return AskResponse(answer=answer, history=fetch_recent_history())
 
